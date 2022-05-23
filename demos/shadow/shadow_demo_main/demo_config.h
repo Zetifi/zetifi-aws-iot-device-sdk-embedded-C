@@ -122,6 +122,7 @@
     #define THING_NAME    "testShadow"
 #endif
 
+
 /**
  * @brief MQTT client identifier.
  *

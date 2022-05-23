@@ -158,7 +158,7 @@
     "{"                         \
     "\"state\":{"               \
     "\"reported\":{"            \
-    "\"power\":%01d,"           \
+    "\"power\":%00d,"           \
     "\"welcome\":%01d,"         \
     "\"wifi\":%01d"             \
     "}"                         \
@@ -688,6 +688,8 @@ int main( int argc,
      * it from being placed on the call stack. */
     static char updateDocument[ SHADOW_REPORTED_JSON_LENGTH + 1 ] = { 0 };
 
+    static char newUpdateDocument[ INIT_SHADOW_REPORTED_JSON_LENGTH + 1 ] = { 0 };
+
     ( void ) argc;
     ( void ) argv;
 
@@ -702,7 +704,6 @@ int main( int argc,
         }
         else
         {
-            LogDebug( ( "Compiled and changes added" ) );
             /* Successfully connect to MQTT broker, the next step is
              * to subscribe shadow topics. */
             // if( returnStatus == EXIT_SUCCESS )
@@ -724,10 +725,38 @@ int main( int argc,
             // }
             
             // Custom stuff
+            LogInfo( ( "Running Zetifi shadow docuemnts" ) );
             if( returnStatus == EXIT_SUCCESS )
             {
                 returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, INIT_SHADOW_NAME ),
                                                  SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, INIT_SHADOW_NAME_LENGTH ) );
+            }
+
+            LogInfo( ( "Publishing an update of device current state" ) );
+
+            if( returnStatus == EXIT_SUCCESS )
+            {
+                /* desired power on state . */
+                LogInfo( ( "Send the new welcome message from the device" ) );
+
+                ( void ) memset( newUpdateDocument,
+                                 0x00,
+                                 sizeof( newUpdateDocument ) );
+
+                /* Keep the client token in global variable used to compare if
+                 * the same token in /update/accepted. */
+                clientToken = ( Clock_GetTimeMs() % 1000000 );
+
+                snprintf( newUpdateDocument,
+                          INIT_SHADOW_REPORTED_JSON_LENGTH + 1,
+                          INIT_SHADOW_REPORTED_JSON,
+                          ( int ) 1,
+                          ( long unsigned ) clientToken );
+
+                returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, INIT_SHADOW_NAME ),
+                                               SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, INIT_SHADOW_NAME_LENGTH),
+                                               newUpdateDocument,
+                                               ( INIT_SHADOW_REPORTED_JSON_LENGTH + 1 ) );
             }
 
 
@@ -766,86 +795,86 @@ int main( int argc,
              * the device itself. But for the purpose of making this demo self-contained,
              * we publish one here so that we can receive a delta message later.
              */
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                /* desired power on state . */
-                LogInfo( ( "Send desired power state with 1." ) );
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     /* desired power on state . */
+            //     LogInfo( ( "Send desired power state with 1." ) );
 
-                ( void ) memset( updateDocument,
-                                 0x00,
-                                 sizeof( updateDocument ) );
+            //     ( void ) memset( updateDocument,
+            //                      0x00,
+            //                      sizeof( updateDocument ) );
 
-                /* Keep the client token in global variable used to compare if
-                 * the same token in /update/accepted. */
-                clientToken = ( Clock_GetTimeMs() % 1000000 );
+            //     /* Keep the client token in global variable used to compare if
+            //      * the same token in /update/accepted. */
+            //     clientToken = ( Clock_GetTimeMs() % 1000000 );
 
-                snprintf( updateDocument,
-                          SHADOW_DESIRED_JSON_LENGTH + 1,
-                          SHADOW_DESIRED_JSON,
-                          ( int ) 1,
-                          ( long unsigned ) clientToken );
+            //     snprintf( updateDocument,
+            //               SHADOW_DESIRED_JSON_LENGTH + 1,
+            //               SHADOW_DESIRED_JSON,
+            //               ( int ) 1,
+            //               ( long unsigned ) clientToken );
 
-                returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
-                                               SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
-                                               updateDocument,
-                                               ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
-            }
+            //     returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
+            //                                    SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
+            //                                    updateDocument,
+            //                                    ( SHADOW_DESIRED_JSON_LENGTH + 1 ) );
+            // }
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                /* Note that PublishToTopic already called MQTT_ProcessLoop,
-                 * therefore responses may have been received and the eventCallback
-                 * may have been called, which may have changed the stateChanged flag.
-                 * Check if the state change flag has been modified or not. If it's modified,
-                 * then we publish reported state to update topic.
-                 */
-                if( stateChanged == true )
-                {
-                    /* Report the latest power state back to device shadow. */
-                    LogInfo( ( "Report to the state change: %d", currentPowerOnState ) );
-                    ( void ) memset( updateDocument,
-                                     0x00,
-                                     sizeof( updateDocument ) );
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     /* Note that PublishToTopic already called MQTT_ProcessLoop,
+            //      * therefore responses may have been received and the eventCallback
+            //      * may have been called, which may have changed the stateChanged flag.
+            //      * Check if the state change flag has been modified or not. If it's modified,
+            //      * then we publish reported state to update topic.
+            //      */
+            //     if( stateChanged == true )
+            //     {
+            //         /* Report the latest power state back to device shadow. */
+            //         LogInfo( ( "Report to the state change: %d", currentPowerOnState ) );
+            //         ( void ) memset( updateDocument,
+            //                          0x00,
+            //                          sizeof( updateDocument ) );
 
-                    /* Keep the client token in global variable used to compare if
-                     * the same token in /update/accepted. */
-                    clientToken = ( Clock_GetTimeMs() % 1000000 );
+            //         /* Keep the client token in global variable used to compare if
+            //          * the same token in /update/accepted. */
+            //         clientToken = ( Clock_GetTimeMs() % 1000000 );
 
-                    snprintf( updateDocument,
-                              SHADOW_REPORTED_JSON_LENGTH + 1,
-                              SHADOW_REPORTED_JSON,
-                              ( int ) currentPowerOnState,
-                              ( long unsigned ) clientToken );
+            //         snprintf( updateDocument,
+            //                   SHADOW_REPORTED_JSON_LENGTH + 1,
+            //                   SHADOW_REPORTED_JSON,
+            //                   ( int ) currentPowerOnState,
+            //                   ( long unsigned ) clientToken );
 
-                    returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
-                                                   SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
-                                                   updateDocument,
-                                                   ( SHADOW_REPORTED_JSON_LENGTH + 1 ) );
-                }
-                else
-                {
-                    LogInfo( ( "No change from /update/delta, unsubscribe all shadow topics and disconnect from MQTT.\r\n" ) );
-                }
-            }
+            //         returnStatus = PublishToTopic( SHADOW_TOPIC_STR_UPDATE( THING_NAME, SHADOW_NAME ),
+            //                                        SHADOW_TOPIC_LEN_UPDATE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
+            //                                        updateDocument,
+            //                                        ( SHADOW_REPORTED_JSON_LENGTH + 1 ) );
+            //     }
+            //     else
+            //     {
+            //         LogInfo( ( "No change from /update/delta, unsubscribe all shadow topics and disconnect from MQTT.\r\n" ) );
+            //     }
+            // }
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
-                returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
-                                                     SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     LogInfo( ( "Start to unsubscribe shadow topics and disconnect from MQTT. \r\n" ) );
+            //     returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
+            //                                          SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_ACC( THING_NAME, SHADOW_NAME ),
-                                                     SHADOW_TOPIC_LEN_UPDATE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_ACC( THING_NAME, SHADOW_NAME ),
+            //                                          SHADOW_TOPIC_LEN_UPDATE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_REJ( THING_NAME, SHADOW_NAME ),
-                                                     SHADOW_TOPIC_LEN_UPDATE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_UPDATE_REJ( THING_NAME, SHADOW_NAME ),
+            //                                          SHADOW_TOPIC_LEN_UPDATE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
 
             /* The MQTT session is always disconnected, even there were prior failures. */
             returnStatus = DisconnectMqttSession();
