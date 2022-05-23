@@ -158,9 +158,9 @@
     "{"                         \
     "\"state\":{"               \
     "\"reported\":{"            \
-    "\"power\":%00d,"           \
-    "\"welcome\":%01d,"         \
-    "\"wifi\":%01d"             \
+    "\"power\":on,"           \
+    "\"welcome\": ZOW binary,"         \
+    "\"wifi\": off"             \
     "}"                         \
     "},"                        \
     "\"clientToken\":\"%06lu\"" \
