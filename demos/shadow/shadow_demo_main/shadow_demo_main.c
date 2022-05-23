@@ -153,6 +153,21 @@
  */
 #define SHADOW_REPORTED_JSON_LENGTH    ( sizeof( SHADOW_REPORTED_JSON ) - 3 )
 
+
+#define INIT_SHADOW_REPORTED_JSON    \
+    "{"                         \
+    "\"state\":{"               \
+    "\"reported\":{"            \
+    "\"power\":%01d,"           \
+    "\"welcome\":%01d,"         \
+    "\"wifi\":%01d"             \
+    "}"                         \
+    "},"                        \
+    "\"clientToken\":\"%06lu\"" \
+    "}"
+
+#define INIT_SHADOW_REPORTED_JSON_LENGTH    ( sizeof( INIT_SHADOW_REPORTED_JSON ) - 3 )
+
 /**
  * @brief The maximum number of times to run the loop in this demo.
  *
@@ -687,88 +702,34 @@ int main( int argc,
         }
         else
         {
-            /* Reset the shadow delete status flags. */
-            deleteResponseReceived = false;
-            shadowDeleted = false;
-
-            /* First of all, try to delete any Shadow document in the cloud.
-             * Try to subscribe to `/delete/accepted` and `/delete/rejected` topics. */
-            returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_DELETE_ACC( THING_NAME, SHADOW_NAME ),
-                                             SHADOW_TOPIC_LEN_DELETE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                /* Try to subscribe to `/delete/rejected` topic. */
-                returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_DELETE_REJ( THING_NAME, SHADOW_NAME ),
-                                                 SHADOW_TOPIC_LEN_DELETE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
-
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                /* Publish to Shadow `delete` topic to attempt to delete the
-                 * Shadow document if exists. */
-                returnStatus = PublishToTopic( SHADOW_TOPIC_STR_DELETE( THING_NAME, SHADOW_NAME ),
-                                               SHADOW_TOPIC_LEN_DELETE( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ),
-                                               updateDocument,
-                                               0U );
-            }
-
-            /* Unsubscribe from the `/delete/accepted` and 'delete/rejected` topics.*/
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_DELETE_ACC( THING_NAME, SHADOW_NAME ),
-                                                     SHADOW_TOPIC_LEN_DELETE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
-
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = UnsubscribeFromTopic( SHADOW_TOPIC_STR_DELETE_REJ( THING_NAME, SHADOW_NAME ),
-                                                     SHADOW_TOPIC_LEN_DELETE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
-
-            /* Check if an incoming publish on `/delete/accepted` or `/delete/rejected`
-             * topics. If a response is not received, mark the demo execution as a failure.*/
-            if( ( returnStatus == EXIT_SUCCESS ) && ( deleteResponseReceived != true ) )
-            {
-                LogError( ( "Failed to receive a response for Shadow delete." ) );
-                returnStatus = EXIT_FAILURE;
-            }
-
-            /* Check if Shadow document delete was successful. A delete can be
-             * successful in cases listed below.
-             *  1. If an incoming publish is received on `/delete/accepted` topic.
-             *  2. If an incoming publish is received on `/delete/rejected` topic
-             *     with an error code 404. This indicates that a delete was
-             *     attempted when a Shadow document is not available for the
-             *     Thing. */
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                if( shadowDeleted == false )
-                {
-                    LogError( ( "Shadow delete operation failed." ) );
-                    returnStatus = EXIT_FAILURE;
-                }
-            }
-
+            LogDebug( ( "Compiled and changes added" ) );
             /* Successfully connect to MQTT broker, the next step is
              * to subscribe shadow topics. */
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
+            //                                      SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
+
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_ACC( THING_NAME, SHADOW_NAME ),
+            //                                      SHADOW_TOPIC_LEN_UPDATE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
+
+            // if( returnStatus == EXIT_SUCCESS )
+            // {
+            //     returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_REJ( THING_NAME, SHADOW_NAME ),
+            //                                      SHADOW_TOPIC_LEN_UPDATE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+            // }
+            
+            // Custom stuff
             if( returnStatus == EXIT_SUCCESS )
             {
-                returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, SHADOW_NAME ),
-                                                 SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
+                returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_DELTA( THING_NAME, INIT_SHADOW_NAME ),
+                                                 SHADOW_TOPIC_LEN_UPDATE_DELTA( THING_NAME_LENGTH, INIT_SHADOW_NAME_LENGTH ) );
             }
 
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_ACC( THING_NAME, SHADOW_NAME ),
-                                                 SHADOW_TOPIC_LEN_UPDATE_ACC( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
-
-            if( returnStatus == EXIT_SUCCESS )
-            {
-                returnStatus = SubscribeToTopic( SHADOW_TOPIC_STR_UPDATE_REJ( THING_NAME, SHADOW_NAME ),
-                                                 SHADOW_TOPIC_LEN_UPDATE_REJ( THING_NAME_LENGTH, SHADOW_NAME_LENGTH ) );
-            }
 
             /* This demo uses a constant #THING_NAME and #SHADOW_NAME known at compile time therefore
              * we can use macros to assemble shadow topic strings.

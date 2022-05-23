@@ -146,21 +146,21 @@
  * The current value is given as an example. Please update for your specific
  * operating system.
  */
-#define OS_NAME                   "Ubuntu"
+#define OS_NAME                   "OpenWrt"
 
 /**
  * @brief The version of the operating system that the application is running
  * on. The current value is given as an example. Please update for your specific
  * operating system version.
  */
-#define OS_VERSION                "18.04 LTS"
+#define OS_VERSION                "Z-0W 0.5.3"
 
 /**
  * @brief The name of the hardware platform the application is running on. The
  * current value is given as an example. Please update for your specific
  * hardware platform.
  */
-#define HARDWARE_PLATFORM_NAME    "PC"
+#define HARDWARE_PLATFORM_NAME    "RBM33G"
 
 /**
  * @brief The name of the MQTT library used and its version, following an "@"
@@ -182,5 +182,15 @@
  * @brief The length of #SHADOW_NAME.
  */
 #define SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( SHADOW_NAME ) - 1 ) )
+
+#ifndef INIT_SHADOW_NAME
+    #define INIT_SHADOW_NAME    "init"
+#endif
+
+/**
+ * @brief The length of #INIT_SHADOW_NAME.
+ */
+#define INIT_SHADOW_NAME_LENGTH    ( ( uint16_t ) ( sizeof( INIT_SHADOW_NAME ) - 1 ) )
+
 
 #endif /* ifndef DEMO_CONFIG_H_ */
